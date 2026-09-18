@@ -7,6 +7,8 @@ import com.neuralroute.api.handleAudioFor
 import com.tddworks.openai.gateway.config.Dialect
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
+import io.ktor.server.response.respond
+import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 
 /**
@@ -22,6 +24,15 @@ fun Route.dialectRoutes(registry: ProviderRegistry) {
         route("/$segment/v1/chat/completions") {
             post {
                 handleChatFor(registry, providers, dialect)
+            }
+        }
+        route("/$segment/v1/models") {
+            get {
+                call.respond(
+                    com.neuralroute.api.ModelsResponse(
+                        data = DialectSurfaces.modelsFor(providers, dialect).map { com.neuralroute.api.ModelEntry(it) },
+                    ),
+                )
             }
         }
         if (dialect == Dialect.TEMPLATE) {

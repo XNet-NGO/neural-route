@@ -5,9 +5,11 @@ import com.neuralroute.ProviderRegistry
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receiveText
+import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
+import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import kotlinx.serialization.json.Json
@@ -28,6 +30,21 @@ fun Route.chatApiRoute(registry: ProviderRegistry) {
     val providers = registry.load()
     route("/{provider}/v1/chat/completions") { post { handleChatFor(registry, providers, null) } }
     route("/v1/{provider}/chat/completions") { post { handleChatFor(registry, providers, null) } }
+    route("/{provider}/v1/models") {
+        get {
+            val providerId = call.parameters["provider"]
+            val cfg = providers.firstOrNull { it.id == providerId || it.name == providerId }
+            call.respond(
+                com.neuralroute.api.ModelsResponse(
+                    data =
+                        cfg
+                            ?.let { (it.aliases.keys + it.aliases.values + it.catalog.models.map { m -> m.id }).distinct().sorted() }
+                            .orEmpty()
+                            .map { com.neuralroute.api.ModelEntry(it) },
+                ),
+            )
+        }
+    }
 }
 
 /** Shared chat handler: provider-pinned when [surfaceDialect] is null, else dialect-resolved. */

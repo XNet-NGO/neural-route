@@ -70,6 +70,19 @@ object DialectSurfaces {
         return Resolved(first, resolvedModel, first.aliases["voice"])
     }
 
+    /**
+     * Model slugs addressable on a dialect surface: alias keys + upstream ids +
+     * static catalog ids, deduplicated, across all providers of the dialect.
+     */
+    fun modelsFor(providers: List<ProviderConfig>, dialect: Dialect): List<String> =
+        providers
+            .filter { it.dialect == dialect }
+            .flatMap { p ->
+                p.aliases.keys + p.aliases.values + p.catalog.models.map { it.id }
+            }
+            .distinct()
+            .sorted()
+
     /** Rewrites the "model" field of a chat body to the resolved upstream id (JSON-preserving). */
     fun rewriteModel(body: String, upstreamModel: String?): String {
         if (upstreamModel == null) return body
