@@ -6,12 +6,14 @@ import com.neuralroute.api.providersRoute
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
+import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
@@ -42,6 +44,27 @@ fun Application.module(configDir: Path = Path.of("src/main/resources/provider-co
     }
     install(CORS) {
         anyHost()
+    }
+    // API-key gate: enabled by NEURAL_ROUTE_API_KEY. /health stays open for probes
+    // (llama-state style HEAD checks); everything else requires the key via
+    // X-API-Key or Authorization: Bearer.
+    val apiKey = System.getenv("NEURAL_ROUTE_API_KEY")
+    if (!apiKey.isNullOrEmpty()) {
+        intercept(io.ktor.server.application.ApplicationCallPipeline.Plugins) {
+            if (call.request.local.uri != "/health") {
+                val presented =
+                    call.request.headers["X-API-Key"]
+                        ?: call.request.headers["Authorization"]?.removePrefix("Bearer ")?.trim()
+                if (presented != apiKey) {
+                    call.respondText(
+                        """{"error":{"message":"unauthorized"}}""",
+                        io.ktor.http.ContentType.Application.Json,
+                        io.ktor.http.HttpStatusCode.Unauthorized,
+                    )
+                    finish()
+                }
+            }
+        }
     }
     val registry = ProviderRegistry(configDir)
     val providers = registry.load()

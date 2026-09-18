@@ -35,6 +35,10 @@ Environment:
 - `NEURAL_ROUTE_PORT` — listen port (default `8080`)
 - `NEURAL_ROUTE_CONFIG_DIR` — provider config dir (default
   `src/main/resources/provider-configs`)
+- `NEURAL_ROUTE_API_KEY` — optional API-key gate: when set, all routes except
+  `/health` require `X-API-Key: <key>` or `Authorization: Bearer <key>` (401 otherwise).
+- Provider keys: `QWEN_KEY`, `GOOGLE_AI_STUDIO_KEY`, `CF_TOKEN`/`CF_ACCOUNT`,
+  `ELEVENLABS_KEY` (referenced as `${VAR}` inside provider-configs/*.json).
 
 ## Adding a provider
 
