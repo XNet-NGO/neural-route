@@ -1,0 +1,10 @@
+{
+  "id": "freeinference",
+  "name": "freeinference",
+  "dialect": "OPENAI_COMPAT",
+  "baseUrl": "https://global.freeinference.ai/v1",
+  "auth": { "scheme": "BEARER", "apiKey": "" },
+  "capabilities": { "chat": true, "embeddings": true },
+  "catalog": { "mode": "AUTO", "path": "/models", "ttlSeconds": 3600 },
+  "streaming": "SSE"
+}

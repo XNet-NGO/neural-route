@@ -1,0 +1,10 @@
+{
+  "id": "ollama",
+  "name": "Ollama (local)",
+  "dialect": "OPENAI_COMPAT",
+  "baseUrl": "http://localhost:11434",
+  "auth": { "scheme": "NONE", "apiKey": "" },
+  "capabilities": { "chat": true, "embeddings": true },
+  "catalog": { "mode": "AUTO", "path": "/v1/models" },
+  "streaming": "SSE"
+}
