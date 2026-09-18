@@ -3,7 +3,10 @@
   "name": "Google AI Studio (Gemini)",
   "dialect": "OPENAI_COMPAT",
   "baseUrl": "https://generativelanguage.googleapis.com",
-  "auth": { "scheme": "X_API_KEY", "apiKey": "${GOOGLE_AI_STUDIO_KEY}", "keyHeader": "x-goog-api-key" },
+  "auth": {
+    "scheme": "BEARER",
+    "apiKey": "${GOOGLE_AI_STUDIO_KEY}"
+  },
   "endpoints": {
     "chat": "/v1beta/openai/chat/completions",
     "models": "/v1beta/models",
@@ -11,7 +14,14 @@
     "batches": "/v1beta/openai/batches",
     "interactions": "/v1beta/openai/interactions"
   },
-  "capabilities": { "chat": true, "embeddings": true, "imagesGenerate": true },
-  "catalog": { "mode": "AUTO", "path": "/v1beta/models" },
+  "capabilities": {
+    "chat": true,
+    "embeddings": true,
+    "imagesGenerate": true
+  },
+  "catalog": {
+    "mode": "AUTO",
+    "path": "/v1beta/models"
+  },
   "streaming": "SSE"
 }

@@ -36,6 +36,25 @@ class ProviderRegistry(private val configDir: Path) {
         cfg.copy(
             baseUrl = expand(cfg.baseUrl),
             auth = cfg.auth.copy(apiKey = expand(cfg.auth.apiKey)),
+            endpoints =
+                cfg.endpoints.copy(
+                    chat = cfg.endpoints.chat?.let { expand(it) },
+                    completions = cfg.endpoints.completions?.let { expand(it) },
+                    embeddings = cfg.endpoints.embeddings?.let { expand(it) },
+                    models = cfg.endpoints.models?.let { expand(it) },
+                    batches = cfg.endpoints.batches?.let { expand(it) },
+                    files = cfg.endpoints.files?.let { expand(it) },
+                    interactions = cfg.endpoints.interactions?.let { expand(it) },
+                    responses = cfg.endpoints.responses?.let { expand(it) },
+                    imagesGenerations = cfg.endpoints.imagesGenerations?.let { expand(it) },
+                    imagesEdits = cfg.endpoints.imagesEdits?.let { expand(it) },
+                    audioSpeech = cfg.endpoints.audioSpeech?.let { expand(it) },
+                    audioTranscriptions = cfg.endpoints.audioTranscriptions?.let { expand(it) },
+                    rerank = cfg.endpoints.rerank?.let { expand(it) },
+                    moderation = cfg.endpoints.moderation?.let { expand(it) },
+                    videos = cfg.endpoints.videos?.let { expand(it) },
+                    tasks = cfg.endpoints.tasks?.let { expand(it) },
+                ),
         )
 
     private fun expand(value: String): String {
