@@ -1,5 +1,6 @@
 package com.neuralroute.api
 
+import com.neuralroute.DialectSurfaces
 import com.neuralroute.ProviderRegistry
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -10,39 +11,65 @@ import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * OpenAI-compatible chat proxy. Canonical shape keeps the provider BEFORE the
- * version segment so unmodified OpenAI SDK clients work:
+ * Chat proxy routes. Two addressing modes:
  *
- *   base_url = http://host/{provider}/v1  ->  POST /v1/chat/completions
+ * 1. Dialect surfaces (canonical): POST /{dialect}/v1/chat/completions —
+ *    the router resolves model slug -> compatible provider config.
+ * 2. Provider-pinned: POST /{provider}/v1/chat/completions (+ /v1/{provider}/... alias).
  *
- *   POST /{provider}/v1/chat/completions   (canonical)
- *   POST /v1/{provider}/chat/completions   (deprecated alias)
- *
- * The body is standard D1 and routes through any dialect via llm-core.
+ * Bodies are standard D1 and route through any dialect via llm-core.
  */
 fun Route.chatApiRoute(registry: ProviderRegistry) {
-    route("/{provider}/v1/chat/completions") { post { handleChat(registry) } }
-    route("/v1/{provider}/chat/completions") { post { handleChat(registry) } }
+    val providers = registry.load()
+    route("/{provider}/v1/chat/completions") { post { handleChatFor(registry, providers, null) } }
+    route("/v1/{provider}/chat/completions") { post { handleChatFor(registry, providers, null) } }
 }
 
-private suspend fun RoutingContext.handleChat(registry: ProviderRegistry) {
+/** Shared chat handler: provider-pinned when [surfaceDialect] is null, else dialect-resolved. */
+suspend fun RoutingContext.handleChatFor(
+    registry: ProviderRegistry,
+    providers: List<com.tddworks.openai.gateway.config.ProviderConfig>,
+    surfaceDialect: com.tddworks.openai.gateway.config.Dialect?,
+) {
     val json = Json { ignoreUnknownKeys = true }
-    val providerId = call.parameters["provider"] ?: return call.respondText(
-        "missing provider",
-        ContentType.Text.Plain,
-        HttpStatusCode.BadRequest,
-    )
-    val cfg = registry.load().firstOrNull { it.id == providerId || it.name == providerId }
-        ?: return call.respondText(
-            "unknown provider: $providerId",
-            ContentType.Text.Plain,
-            HttpStatusCode.NotFound,
-        )
-    val provider = registry.build(cfg)
     val body = call.receiveText()
-    val request = json.decodeFromString(com.tddworks.openai.api.chat.api.ChatCompletionRequest.serializer(), body)
+    val modelFromBody = json.parseToJsonElement(body).jsonObject["model"]?.jsonPrimitive?.contentOrNull
+    val cfg: com.tddworks.openai.gateway.config.ProviderConfig
+    val upstreamModel: String?
+    if (surfaceDialect != null) {
+        val resolved =
+            runCatching { DialectSurfaces.resolveChat(providers, surfaceDialect, modelFromBody) }
+                .getOrElse { e ->
+                    return call.respondText(
+                        """{"error":{"message":${json.encodeToString(kotlinx.serialization.json.JsonPrimitive(e.message ?: "no providers"))}}}""",
+                        ContentType.Application.Json,
+                        HttpStatusCode.BadRequest,
+                    )
+                }
+        cfg = resolved.provider
+        upstreamModel = resolved.model
+    } else {
+        val providerId = call.parameters["provider"] ?: return call.respondText(
+            "missing provider",
+            ContentType.Text.Plain,
+            HttpStatusCode.BadRequest,
+        )
+        cfg = providers.firstOrNull { it.id == providerId || it.name == providerId }
+            ?: return call.respondText(
+                "unknown provider: $providerId",
+                ContentType.Text.Plain,
+                HttpStatusCode.NotFound,
+            )
+        upstreamModel = null
+    }
+    val provider = registry.build(cfg)
+    val routedBody = if (upstreamModel != null) DialectSurfaces.rewriteModel(body, upstreamModel) else body
+    val request = json.decodeFromString(com.tddworks.openai.api.chat.api.ChatCompletionRequest.serializer(), routedBody)
     val response =
         runCatching { provider.chatCompletions(request) }
             .getOrElse { e ->

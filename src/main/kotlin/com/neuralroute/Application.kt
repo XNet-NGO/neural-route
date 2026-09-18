@@ -1,6 +1,7 @@
 package com.neuralroute
 
 import com.neuralroute.api.audioRoute
+import com.neuralroute.api.dialectRoutes
 import com.neuralroute.api.chatApiRoute
 import com.neuralroute.api.providersRoute
 import io.ktor.http.HttpStatusCode
@@ -73,5 +74,6 @@ fun Application.module(configDir: Path = Path.of("src/main/resources/provider-co
         providersRoute(providers)
         chatApiRoute(registry)
         audioRoute(registry)
+        dialectRoutes(registry)
     }
 }
