@@ -1,5 +1,6 @@
 package com.neuralroute
 
+import com.neuralroute.api.audioRoute
 import com.neuralroute.api.chatApiRoute
 import com.neuralroute.api.providersRoute
 import io.ktor.http.HttpStatusCode
@@ -48,5 +49,6 @@ fun Application.module(configDir: Path = Path.of("src/main/resources/provider-co
         get("/health") { call.respond(com.neuralroute.api.HealthResponse("ok", providers.size)) }
         providersRoute(providers)
         chatApiRoute(registry)
+        audioRoute(registry)
     }
 }

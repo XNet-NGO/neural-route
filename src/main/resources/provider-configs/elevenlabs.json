@@ -1,0 +1,19 @@
+{
+  "id": "elevenlabs",
+  "name": "ElevenLabs",
+  "dialect": "TEMPLATE",
+  "baseUrl": "https://api.elevenlabs.io",
+  "auth": { "scheme": "X_API_KEY", "apiKey": "${ELEVENLABS_KEY}", "keyHeader": "xi-api-key" },
+  "capabilities": { "chat": false, "tts": true },
+  "aliases": { "tts-model": "eleven_v3" },
+  "transforms": {
+    "audioSpeech": {
+      "path": "/v1/text-to-speech/{{voice_id}}",
+      "headers": { "Accept": "audio/mpeg" },
+      "requestTemplate": { "text": "{{text}}", "model_id": "{{model}}" },
+      "responseMapper": { "from": "$", "decode": "raw" }
+    }
+  },
+  "catalog": { "mode": "STATIC", "models": [] },
+  "streaming": "CHUNKED"
+}
