@@ -17,8 +17,9 @@ Headless, config-driven LLM router on the JVM, built on llm-core.
 |---|---|---|
 | GET | `/health` | liveness + provider count |
 | GET | `/api/v1/providers` | admin REST: provider inventory (id/dialect/baseUrl/capabilities) |
-| POST | `/v1/{provider}/chat/completions` | OpenAI-compat D1 proxy through any dialect |
-| POST | `/v1/{provider}/chat/completions` (stream) | SSE passthrough (follow-up) |
+| POST | `/{provider}/v1/chat/completions` | OpenAI-compat D1 proxy, any dialect — provider BEFORE /v1 so unmodified SDKs work (`base_url = http://host/{provider}/v1`) |
+| POST | `/{provider}/v1/audio/speech` | TTS via `audioSpeech` transform: `{model?, input, voice?}` → audio/mpeg |
+| POST | `/v1/{provider}/chat/completions`, `/v1/{provider}/audio/speech` | deprecated aliases (pre-provider-version shape) |
 
 ## Run
 
