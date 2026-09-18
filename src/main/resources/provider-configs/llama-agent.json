@@ -1,0 +1,11 @@
+{
+  "id": "llama-agent",
+  "name": "llama-agent (local Gemma-4)",
+  "dialect": "OPENAI_COMPAT",
+  "baseUrl": "http://127.0.0.1:3333",
+  "auth": { "scheme": "NONE", "apiKey": "" },
+  "capabilities": { "chat": true },
+  "aliases": { "gemma-4": "/models/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q8_K_P.gguf" },
+  "catalog": { "mode": "AUTO", "path": "/v1/models" },
+  "streaming": "SSE"
+}
