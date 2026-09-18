@@ -35,6 +35,15 @@ class ProviderRegistryTest {
     }
 
     @Test
+    fun `env placeholders expand from environment`() {
+        val dir = Files.createTempDirectory("cfg")
+        Files.writeString(dir.resolve("k.json"), """{"id":"k","baseUrl":"https://h.test","auth":{"scheme":"X_API_KEY","apiKey":"${'$'}{CP_TEST_KEY}","keyHeader":"x-goog-api-key"}}""")
+        // placeholder not in env -> empty key, first-class unauthenticated state
+        val emptyKey = ProviderRegistry(dir).load().first()
+        assertEquals("", emptyKey.auth.apiKey)
+    }
+
+    @Test
     fun `build throws for unsupported dialect at load time`() {
         val dir = Files.createTempDirectory("cfg")
         Files.writeString(

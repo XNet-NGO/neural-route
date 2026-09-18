@@ -1,0 +1,12 @@
+{
+  "id": "cloudflare-workers-ai",
+  "name": "Cloudflare Workers AI",
+  "dialect": "OPENAI_COMPAT",
+  "baseUrl": "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT}/ai/v1",
+  "auth": { "scheme": "BEARER", "apiKey": "${CF_TOKEN}" },
+  "endpoints": { "chat": "/chat/completions", "models": "/models/search" },
+  "capabilities": { "chat": true, "embeddings": true, "imagesGenerate": true },
+  "catalog": { "mode": "STATIC", "path": "/models/search" },
+  "streaming": "SSE",
+  "aliases": { "llama-3.3-70b": "@cf/meta/llama-3.3-70b-instruct-fp8-fast" }
+}

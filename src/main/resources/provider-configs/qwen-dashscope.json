@@ -1,0 +1,32 @@
+{
+  "id": "qwen-dashscope",
+  "name": "Qwen Cloud (DashScope intl)",
+  "dialect": "OPENAI_COMPAT",
+  "baseUrl": "https://dashscope-intl.aliyuncs.com",
+  "auth": {
+    "scheme": "BEARER",
+    "apiKey": "${QWEN_KEY}"
+  },
+  "endpoints": {
+    "chat": "/compatible-mode/v1/chat/completions",
+    "models": "/compatible-mode/v1/models",
+    "embeddings": "/compatible-mode/v1/embeddings"
+  },
+  "capabilities": {
+    "chat": true,
+    "embeddings": true
+  },
+  "catalog": {
+    "mode": "AUTO",
+    "path": "/compatible-mode/v1/models"
+  },
+  "streaming": "SSE",
+  "aliases": {
+    "qwen3-flash": "qwen3.8-flash",
+    "qwen-flash": "qwen3.8-flash",
+    "qwen3.8-flash": "qwen3.8-flash",
+    "deepseek-v4": "deepseek-v4.1-flash",
+    "glm-5.3": "glm-5.3",
+    "kimi-k3": "kimi/kimi-k3"
+  }
+}

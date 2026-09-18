@@ -11,6 +11,10 @@ import java.nio.file.Path
  * src/main/resources/provider-configs). Every file is a ProviderConfig JSON block as
  * pinned in llm-core's research/providers-100/00-index.md — the same blocks the
  * portal and the test suites use.
+ *
+ * Secrets: never commit keys. Config files may reference environment variables with
+ * ${NAME} placeholders in [ProviderConfig.baseUrl] and [ProviderConfig.auth.apiKey];
+ * they are resolved at load time (e.g. "${GOOGLE_AI_STUDIO_KEY}", "${CF_ACCOUNT}").
  */
 class ProviderRegistry(private val configDir: Path) {
 
@@ -20,11 +24,26 @@ class ProviderRegistry(private val configDir: Path) {
             stream
                 .filter { it.toString().endsWith(".json") }
                 .sorted()
-                .map { path -> ProviderConfig.fromJson(Files.readString(path)) }
+                .map { path -> resolveEnv(ProviderConfig.fromJson(Files.readString(path))) }
                 .toList()
         }
     }
 
     /** Builds the runtime provider (any dialect) for the given config. */
     fun build(cfg: ProviderConfig): OpenAIProvider = OpenAIProvider.from(cfg)
+
+    private fun resolveEnv(cfg: ProviderConfig): ProviderConfig =
+        cfg.copy(
+            baseUrl = expand(cfg.baseUrl),
+            auth = cfg.auth.copy(apiKey = expand(cfg.auth.apiKey)),
+        )
+
+    private fun expand(value: String): String {
+        if (!value.contains("\${")) return value
+        var out = value
+        Regex("""\$\{([A-Za-z_][A-Za-z0-9_]*)}""").findAll(value).forEach { m ->
+            out = out.replace(m.value, System.getenv(m.groupValues[1]) ?: "")
+        }
+        return out
+    }
 }

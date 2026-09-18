@@ -34,7 +34,23 @@ fun Route.chatApiRoute(registry: ProviderRegistry) {
             val provider = registry.build(cfg)
             val body = call.receiveText()
             val request = json.decodeFromString(com.tddworks.openai.api.chat.api.ChatCompletionRequest.serializer(), body)
-            val response = provider.chatCompletions(request)
+            val response =
+                runCatching { provider.chatCompletions(request) }
+                    .getOrElse { e ->
+                        val detail = e.message ?: "proxy error"
+                        val status =
+                            when {
+                                detail.contains("404") -> HttpStatusCode.NotFound
+                                detail.contains("401") || detail.contains("403") -> HttpStatusCode.Unauthorized
+                                detail.contains("429") || detail.contains("rate") -> HttpStatusCode.TooManyRequests
+                                else -> HttpStatusCode.BadGateway
+                            }
+                        return@post call.respondText(
+                            """{"error":{"type":"upstream","status":${status.value},"message":${json.encodeToString(kotlinx.serialization.json.JsonPrimitive(detail))}}}""",
+                            ContentType.Application.Json,
+                            status,
+                        )
+                    }
             call.respondText(json.encodeToString(com.tddworks.openai.api.chat.api.ChatCompletion.serializer(), response), ContentType.Application.Json)
         }
     }
