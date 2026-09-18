@@ -1,0 +1,20 @@
+{
+  "id": "anthropic",
+  "name": "Anthropic Claude",
+  "dialect": "ANTHROPIC",
+  "baseUrl": "https://api.anthropic.com",
+  "auth": {
+    "scheme": "X_API_KEY",
+    "apiKey": "${ANTHROPIC_KEY}",
+    "keyHeader": "x-api-key",
+    "extraHeaders": { "anthropic-version": "2023-06-01" }
+  },
+  "capabilities": { "chat": true },
+  "aliases": {
+    "claude-sonnet": "claude-sonnet-4-5",
+    "claude-sonnet-4": "claude-sonnet-4-5",
+    "claude-opus": "claude-opus-4-4"
+  },
+  "catalog": { "mode": "STATIC", "models": [] },
+  "streaming": "SSE"
+}
